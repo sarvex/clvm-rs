@@ -16,11 +16,11 @@ def recursive_cons(filename, num):
 (a (q 2 2 (c 2 (c (q . 1337) (c 5 ())))) (c (q 2 (i 11 (q 4 5 (a 2 (c 2 (c 5 (c (- 11 (q . 1)) (c 5 ())))))) ()) 1) 1))
 ''')
 
-    with open(filename[:-4] + 'env', 'w+') as f:
+    with open(f'{filename[:-4]}env', 'w+') as f:
         f.write('(%d)' % num)
 
 def many_args(filename, op, num):
-    with open(filename + '-precompiled', 'w+') as f:
+    with open(f'{filename}-precompiled', 'w+') as f:
         f.write('''
 ;(mod (n)
 ;    (defun large-atom (n)
@@ -33,23 +33,26 @@ def many_args(filename, op, num):
 ;)
 ''' % op)
 
-        f.write('(a (q 2 6 (c 2 (c (a 4 (c 2 (c 5 (q)))) (q)))) (c (q (a (i 5 (q 23 (a 4 (c 2 (c (- 5 (q . 1)) (q)))) (q . 0x00ffff)) (q 1 . -128)) 1) %s' % op)
+        f.write(
+            f'(a (q 2 6 (c 2 (c (a 4 (c 2 (c 5 (q)))) (q)))) (c (q (a (i 5 (q 23 (a 4 (c 2 (c (- 5 (q . 1)) (q)))) (q . 0x00ffff)) (q 1 . -128)) 1) {op}'
+        )
         f.write(' 5' * num)
         f.write(') 1))')
 
-    with open(filename[:-4] + 'env', 'w+') as f:
+    with open(f'{filename[:-4]}env', 'w+') as f:
         f.write('(500)')
 
     if op.startswith('0x'):
         hexop = op[2:]
-        if len(hexop) % 2 != 0: hexop = '0' + hexop
+        if len(hexop) % 2 != 0:
+            hexop = f'0{hexop}'
         if len(hexop) > 2 or hexop[0] in 'fec8':
             # in this case we need a length prefix for the atom
             hexop = '8%x' % (len(hexop) // 2) + hexop
     else:
         hexop = KEYWORD_TO_ATOM[op].hex()
 
-    with open(filename[:-4] + 'hex', 'w+') as f:
+    with open(f'{filename[:-4]}hex', 'w+') as f:
         f.write('ff02ffff01ff02ff06ffff04ff02ffff04ffff02ff04ffff04ff02ffff04ff05ffff'
             '0180808080ffff0180808080ffff04ffff01ffff02ffff03ff05ffff01ff17ffff02'
             'ff04ffff04ff02ffff04ffff11ff05ffff010180ffff0180808080ffff018300ffff'
@@ -65,11 +68,13 @@ def many_args_point(filename, op, num):
 ;    (raise (logxor n 0xb3b8ac537f4fd6bde9b26221d49b54b17a506be147347dae5d081c0a6572b611d8484e338f3432971a9823976c6a232b))
 ;)
 ''' % op)
-        f.write('(a (q 2 2 (c 2 (c (logxor 5 (q . 0xb3b8ac537f4fd6bde9b26221d49b54b17a506be147347dae5d081c0a6572b611d8484e338f3432971a9823976c6a232b)) (q)))) (c (q %s' % op)
+        f.write(
+            f'(a (q 2 2 (c 2 (c (logxor 5 (q . 0xb3b8ac537f4fd6bde9b26221d49b54b17a506be147347dae5d081c0a6572b611d8484e338f3432971a9823976c6a232b)) (q)))) (c (q {op}'
+        )
         f.write(' 5' * num)
         f.write(') 1)))')
 
-    with open(filename[:-4] + 'env', 'w+') as f:
+    with open(f'{filename[:-4]}env', 'w+') as f:
         f.write('(0)')
 
 def softfork_wrap(filename, val):
@@ -85,7 +90,7 @@ def softfork_wrap(filename, val):
 (a (q 2 2 (c 2 (c 5 (q)))) (c (q 2 (i (= (q) 5) (q 1 . 42) (q 2 2 (c 2 (c (+ (- 5 (q . 1)) (softfork (q . %s))) (q))))) 1) 1))
 ''' % (val, val))
 
-    with open(filename[:-4] + 'env', 'w+') as f:
+    with open(f'{filename[:-4]}env', 'w+') as f:
         f.write('(0xffffffff)')
 
 def binary_recurse(filename, op, val, count):
@@ -100,16 +105,12 @@ def binary_recurse(filename, op, val, count):
 (a (q 2 2 (c 2 (c (q . {val}) (c 5 ())))) (c (q 2 (i (= 11 ()) (q . 5) (q 2 2 (c 2 (c ({op} 5 5) (c (- 11 (q . 1)) ()))))) 1) 1))
 '''.format(op=op, val=val))
 
-    with open(filename[:-4] + 'env', 'w+') as f:
+    with open(f'{filename[:-4]}env', 'w+') as f:
         f.write(f'({count})')
 
 def unary_recurse(filename, op, second, count):
 
-    if second != '':
-        quoted_second = f' (q . {second})'
-    else:
-        quoted_second = ''
-
+    quoted_second = f' (q . {second})' if second != '' else ''
     with open(filename, 'w+') as f:
         f.write('''; (mod (N)
 ;   (defun large-atom (n)
@@ -123,7 +124,7 @@ def unary_recurse(filename, op, second, count):
 (a (q 2 4 (c 2 (c (a 6 (c 2 (q 6))) (c 5 ())))) (c (q (a (i (= 11 ()) (q . 5) (q 2 4 (c 2 (c ({op} 5 {quoted_second}) (c (- 11 (q . 1)) ()))))) 1) 2 (i 5 (q 23 (a 6 (c 2 (c (- 5 (q . 1)) ()))) (q . 0x00ffff)) (q 1 . -128)) 1) 1))
 '''.format(op=op, second=second, quoted_second=quoted_second))
 
-    with open(filename[:-4] + 'env', 'w+') as f:
+    with open(f'{filename[:-4]}env', 'w+') as f:
         f.write(f'({count})')
 
 def serialized_atom_overflow(filename, size):

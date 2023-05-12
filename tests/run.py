@@ -32,8 +32,7 @@ def count_tree_size(tree) -> int:
         if i.atom is not None:
             ret += len(i.atom)
         elif i.pair is not None:
-            stack.append(i.pair[1])
-            stack.append(i.pair[0])
+            stack.extend((i.pair[1], i.pair[0]))
         else:
             # this shouldn't happen
             assert False

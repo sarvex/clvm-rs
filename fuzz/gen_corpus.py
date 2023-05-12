@@ -38,8 +38,7 @@ OPERATORS = [
 ]
 
 def arguments():
-    for v in [0, 1, -1]:
-        yield v
+    yield from [0, 1, -1]
     yield '"FOOBAR"'
     yield "(q 1 2 3)"
     yield "(q . ())"

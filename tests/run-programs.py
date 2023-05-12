@@ -18,25 +18,25 @@ for fn in glob.glob('programs/large-atom-*.hex.invalid'):
         ret = 1
         print("FAILED: expected parse failure")
     except Exception as e:
-        print("expected failure: %s" % e)
+        print(f"expected failure: {e}")
 
 
 for fn in glob.glob('programs/*.clvm'):
 
-    hexname = fn[:-4] + 'hex'
+    hexname = f'{fn[:-4]}hex'
     with open(hexname, 'w+') as out:
         proc = subprocess.Popen(['opc', fn], stdout=out)
         proc.wait()
 
 for fn in glob.glob('programs/*.env'):
-    hexenv = fn + 'hex'
+    hexenv = f'{fn}hex'
     with open(hexenv, 'w+') as out:
         proc = subprocess.Popen(['opc', fn], stdout=out)
         proc.wait()
 
 for hexname in sorted(glob.glob('programs/*.hex')):
 
-    hexenv = hexname[:-3] + 'envhex'
+    hexenv = f'{hexname[:-3]}envhex'
 
 #    command = ['brun', '-m', '11000000000', '-c', '--backend=rust', '--quiet', '--time', '--hex', hexname, hexenv]
     command = ['./run.py', hexname, hexenv]
@@ -90,6 +90,6 @@ for hexname in sorted(glob.glob('programs/*.hex')):
         print(Fore.RED + '\nTEST FAILURE: Time exceeded: %f (limit: 11)\n' % (end - start) + Style.RESET_ALL)
 
 if ret:
-    print(Fore.RED + f'\n   There were {ret} failures!\n' + Style.RESET_ALL)
+    print(f'{Fore.RED}\n   There were {ret} failures!\n{Style.RESET_ALL}')
 
 sys.exit(ret)
